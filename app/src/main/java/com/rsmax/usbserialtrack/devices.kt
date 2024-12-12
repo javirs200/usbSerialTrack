@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -51,18 +52,17 @@ fun DevicesScreen(navController: NavController) {
 
         LazyColumn {
             items(listItems) { item ->
-                DeviceListItem(item)
+                DeviceListItem(item,navController)
             }
         }
     }
 }
 
 @Composable
-fun DeviceListItem(item: ListItem) {
+fun DeviceListItem(item: ListItem, navController: NavController) {
     val context = LocalContext.current
-    val navController = LocalContext.current as NavController
 
-    androidx.compose.material3.Card(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
@@ -72,17 +72,20 @@ fun DeviceListItem(item: ListItem) {
                         .makeText(context, "no driver", Toast.LENGTH_SHORT)
                         .show()
                 } else {
-                    navController.navigate("terminal/${item.device.deviceId}/${item.port}/${115200}")
+                    val route = "terminal/${item.device.deviceId}/${item.port}/${115200}"
+                    navController.navigate(route)
                 }
             },
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = "Device: ${item.device.deviceName}",
-            )
-            Text(
+            if(item != null){
+                Text(
+                    text = "Device: ${item.device.deviceName}",
+                )
+                Text(
                     text = "Port: ${item.port}",
-            )
+                )
+            }
         }
     }
 }
