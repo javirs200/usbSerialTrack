@@ -1,18 +1,19 @@
 package com.rsmax.usbserialtrack
 
-import android.R
 import android.content.Context
+import android.content.pm.ActivityInfo
 import android.hardware.usb.UsbManager
-import android.text.Spannable
-import android.text.SpannableStringBuilder
-import android.text.style.ForegroundColorSpan
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -21,12 +22,11 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hoho.android.usbserial.driver.UsbSerialPort
 import com.hoho.android.usbserial.driver.UsbSerialProber
-import com.hoho.android.usbserial.util.HexDump
 import com.hoho.android.usbserial.util.SerialInputOutputManager
 import kotlinx.coroutines.launch
 
 
-class TerminalViewModel : ViewModel(), SerialInputOutputManager.Listener{
+class CronoViewModel : ViewModel(), SerialInputOutputManager.Listener{
 
     private val WRITE_WAIT_MILLIS = 1000
     private var usbSerialPort: UsbSerialPort? = null
@@ -45,7 +45,7 @@ class TerminalViewModel : ViewModel(), SerialInputOutputManager.Listener{
                     usbSerialPort = driver.ports[portNum]
                     usbSerialPort?.open(connection)
                     usbSerialPort?.setParameters(baudRate, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE)
-                    usbIoManager = SerialInputOutputManager(usbSerialPort, this@TerminalViewModel)
+                    usbIoManager = SerialInputOutputManager(usbSerialPort, this@CronoViewModel)
                     usbIoManager?.start()
                     connected = true
                     Toast.makeText(context, "device connected", Toast.LENGTH_SHORT).show()
@@ -88,19 +88,21 @@ class TerminalViewModel : ViewModel(), SerialInputOutputManager.Listener{
 }
 
 @Composable
-fun TerminalScreen(deviceId: Int, portNum: Int, baudRate: Int) {
+fun CronoScreen(deviceId: Int, portNum: Int, baudRate: Int) {
     val context = LocalContext.current
-    val viewModel: TerminalViewModel = viewModel()
+    val viewModel: CronoViewModel = viewModel()
     val receivedData by viewModel.receivedData
 
     LaunchedEffect(Unit) {
         viewModel.connect(context, deviceId, portNum, baudRate)
     }
 
+    LockScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
+
     Column(modifier = Modifier
         .fillMaxSize()
         .padding(16.dp)) {
-        Text(text = "Terminal Screen")
+        Text(text = "Crono Screen")
         Text(text = "Received Data:")
         Text(text = receivedData)
         Button(onClick = {

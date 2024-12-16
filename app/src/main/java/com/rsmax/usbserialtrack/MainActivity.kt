@@ -111,11 +111,11 @@ fun AppNavigation() {
     val navController = rememberNavController()
     NavHost(navController, startDestination = "devices") {
         composable("devices") { DevicesScreen(navController) }
-        composable("terminal/{deviceId}/{portNum}/{baudRate}") { backStackEntry ->
+        composable("crono/{deviceId}/{portNum}/{baudRate}") { backStackEntry ->
             val deviceId = backStackEntry.arguments?.getString("deviceId")?.toInt() ?: 0
             val portNum = backStackEntry.arguments?.getString("portNum")?.toInt() ?: 0
             val baudRate = backStackEntry.arguments?.getString("baudRate")?.toInt() ?: 115200
-            TerminalScreen(deviceId, portNum, baudRate)
+            CronoScreen(deviceId, portNum, baudRate)
         }
     }
 }
