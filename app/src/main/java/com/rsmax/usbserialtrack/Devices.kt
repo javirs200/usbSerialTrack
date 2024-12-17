@@ -28,7 +28,7 @@ import com.hoho.android.usbserial.driver.UsbSerialProber
 data class ListItem(val device: UsbDevice, val port: Int, val driver: UsbSerialDriver?)
 
 @Composable
-fun DevicesScreen(navController: NavController) {
+fun DevicesList(navController: NavController) {
     val context = LocalContext.current
     val usbManager = context.getSystemService(Context.USB_SERVICE) as UsbManager
     val usbDefaultProber = UsbSerialProber.getDefaultProber()
@@ -37,7 +37,7 @@ fun DevicesScreen(navController: NavController) {
     LaunchedEffect(Unit) {
         listItems.clear()
         for (device in usbManager.deviceList.values) {
-            var driver = usbDefaultProber.probeDevice(device)
+            val driver = usbDefaultProber.probeDevice(device)
             if (driver != null) {
                 for (port in driver.ports.indices) {
                     listItems.add(ListItem(device, port, driver))
@@ -72,20 +72,18 @@ fun DeviceListItem(item: ListItem, navController: NavController) {
                         .makeText(context, "no driver", Toast.LENGTH_SHORT)
                         .show()
                 } else {
-                    val route = "terminal/${item.device.deviceId}/${item.port}/${115200}"
+                    val route = "crono/${item.device.deviceId}/${item.port}/${115200}"
                     navController.navigate(route)
                 }
             },
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            if(item != null){
-                Text(
-                    text = "Device: ${item.device.deviceName}",
-                )
-                Text(
-                    text = "Port: ${item.port}",
-                )
-            }
+            Text(
+                text = "Device: ${item.device.deviceName}",
+            )
+            Text(
+                text = "Port: ${item.port}",
+            )
         }
     }
 }

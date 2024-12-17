@@ -4,9 +4,13 @@ import android.content.Context
 import android.content.pm.ActivityInfo
 import android.hardware.usb.UsbManager
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -14,8 +18,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -28,11 +35,11 @@ import kotlinx.coroutines.launch
 
 class CronoViewModel : ViewModel(), SerialInputOutputManager.Listener{
 
-    private val WRITE_WAIT_MILLIS = 1000
+    private val writeWaitMilliseconds = 1000
     private var usbSerialPort: UsbSerialPort? = null
     private var usbIoManager: SerialInputOutputManager? = null
     private val _receivedData = mutableStateOf("")
-    var connected : Boolean = false
+    private var connected : Boolean = false
     val receivedData: State<String> = _receivedData
 
     fun connect(context: Context, deviceId: Int, portNum: Int, baudRate: Int) {
@@ -80,7 +87,7 @@ class CronoViewModel : ViewModel(), SerialInputOutputManager.Listener{
         }
         try {
             val data = (str + '\n').toByteArray()
-            usbSerialPort!!.write(data, WRITE_WAIT_MILLIS)
+            usbSerialPort!!.write(data, writeWaitMilliseconds)
         } catch (e: java.lang.Exception) {
             onRunError(e)
         }
@@ -98,18 +105,42 @@ fun CronoScreen(deviceId: Int, portNum: Int, baudRate: Int) {
     }
 
     LockScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
-
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .padding(16.dp)) {
-        Text(text = "Crono Screen")
-        Text(text = "Received Data:")
-        Text(text = receivedData)
-        Button(onClick = {
-            // Handle button click
-            viewModel.send(context,"mensaje de prueba")
-        }) {
-            Text(text = "Send Data")
+        Row(modifier = Modifier.fillMaxSize()){
+            Column(modifier = Modifier
+                .padding(40.dp)
+                .weight(0.5f)
+                .align(Alignment.CenterVertically)
+            )
+            {
+                Text(text = "Crono Screen")
+                Button(onClick = {
+                    // Handle button click
+                    viewModel.send(context,"mensaje de prueba")
+                }) {
+                    Text(text = "Send Data")
+                }
+            }
+            Column(modifier = Modifier
+                .padding(20.dp)
+                .background(Color.LightGray)
+                .weight(0.3f)
+                .fillMaxSize()
+                .align(Alignment.CenterVertically)
+                .verticalScroll(rememberScrollState()))
+            {
+                Text(text = "Crono Screen")
+                Text(text = "Received Data:")
+                Text(text = receivedData)
+            }
         }
-    }
+
 }
+
+@Preview(
+    device = "spec:parent=virtualPoco,orientation=landscape", apiLevel = 34
+)
+@Composable
+fun CronoPreview(){
+    CronoScreen(0,0,115200)
+}
+

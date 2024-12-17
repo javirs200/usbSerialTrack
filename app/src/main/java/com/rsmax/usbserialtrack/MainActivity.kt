@@ -9,12 +9,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -28,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -40,7 +37,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             UsbSerialTrackTheme {
-                ScaffoldExample()
+                AppNavigation()
             }
         }
     }
@@ -55,9 +52,8 @@ class MainActivity : ComponentActivity() {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    fun ScaffoldExample() {
+    fun DeviceSelectionScreen(navController:NavController) {
         var presses by remember { mutableIntStateOf(0) }
-
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -82,11 +78,6 @@ class MainActivity : ComponentActivity() {
                         text = "made by javi",
                     )
                 }
-            },
-            floatingActionButton = {
-                FloatingActionButton(onClick = { presses++ }) {
-                    Icon(Icons.Default.Add, contentDescription = "Add")
-                }
             }
         ) { innerPadding ->
             Column(
@@ -94,13 +85,7 @@ class MainActivity : ComponentActivity() {
                     .padding(innerPadding),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                Text(
-                    modifier = Modifier.padding(8.dp),
-                    text =
-                    """ Button + pressed : $presses
-                    Devices detected : """.trimIndent(),
-                )
-                AppNavigation()
+                DevicesList(navController)
             }
         }
     }
@@ -110,7 +95,7 @@ class MainActivity : ComponentActivity() {
 fun AppNavigation() {
     val navController = rememberNavController()
     NavHost(navController, startDestination = "devices") {
-        composable("devices") { DevicesScreen(navController) }
+        composable("devices") { DeviceSelectionScreen(navController) }
         composable("crono/{deviceId}/{portNum}/{baudRate}") { backStackEntry ->
             val deviceId = backStackEntry.arguments?.getString("deviceId")?.toInt() ?: 0
             val portNum = backStackEntry.arguments?.getString("portNum")?.toInt() ?: 0
