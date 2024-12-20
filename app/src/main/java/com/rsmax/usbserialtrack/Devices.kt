@@ -25,7 +25,7 @@ import androidx.navigation.NavController
 import com.hoho.android.usbserial.driver.UsbSerialDriver
 import com.hoho.android.usbserial.driver.UsbSerialProber
 
-data class ListItem(val device: UsbDevice, val port: Int, val driver: UsbSerialDriver?)
+data class ListItem(val device: UsbDevice?, val port: Int, val driver: UsbSerialDriver?)
 
 @Composable
 fun DevicesList(navController: NavController) {
@@ -36,6 +36,7 @@ fun DevicesList(navController: NavController) {
 
     LaunchedEffect(Unit) {
         listItems.clear()
+        listItems.add(ListItem(device = null,port = 1 ,driver = null))
         for (device in usbManager.deviceList.values) {
             val driver = usbDefaultProber.probeDevice(device)
             if (driver != null) {
@@ -69,17 +70,19 @@ fun DeviceListItem(item: ListItem, navController: NavController) {
             .clickable {
                 if (item.driver == null) {
                     Toast
-                        .makeText(context, "no driver", Toast.LENGTH_SHORT)
+                        .makeText(context, "no driver , navigate in dev mode", Toast.LENGTH_SHORT)
                         .show()
+                    val route = "crono/${-1}/${item.port}/${0}"
+                    navController.navigate(route)
                 } else {
-                    val route = "crono/${item.device.deviceId}/${item.port}/${115200}"
+                    val route = "crono/${item.device?.deviceId}/${item.port}/${115200}"
                     navController.navigate(route)
                 }
             },
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "Device: ${item.device.deviceName}",
+                text = "Device: ${item.device?.deviceName}",
             )
             Text(
                 text = "Port: ${item.port}",
