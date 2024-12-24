@@ -82,6 +82,7 @@ class CronoViewModel : ViewModel(), SerialInputOutputManager.Listener{
         if(temString.contains("time:")){
             temString = temString.substringAfter("time:").trim()
             val millis = temString.toIntOrNull() ?: return
+
             val minutes = (millis / 60000) % 60
             val seconds = (millis / 1000) % 60
             val milliseconds = millis % 1000
@@ -133,6 +134,9 @@ fun CronoScreen(deviceId: Int, portNum: Int, baudRate: Int) {
 
     LockScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
 
+    DriversManager()
+
+
     Box(modifier = Modifier
         .fillMaxSize()
         .background(
@@ -170,6 +174,7 @@ fun CronoScreen(deviceId: Int, portNum: Int, baudRate: Int) {
                 }) {
                     Text(text = "Send Data")
                 }
+                TimeManager()
             }
             Column(modifier = Modifier
                 .padding(20.dp)
