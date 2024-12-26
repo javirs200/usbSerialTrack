@@ -174,7 +174,7 @@ fun CronoScreen(deviceId: Int, portNum: Int, baudRate: Int) {
                 }) {
                     Text(text = "Send Data")
                 }
-                TimeManager()
+                TimeManager(timeData)
             }
             Column(modifier = Modifier
                 .padding(20.dp)
