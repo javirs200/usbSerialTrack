@@ -49,6 +49,7 @@ class CronoViewModel : ViewModel(), SerialInputOutputManager.Listener{
     private val _timeData = mutableStateOf("")
     private val _threshold = mutableIntStateOf(50)
     private var connected : Boolean = false
+    private var development : Boolean = false
     val receivedData: State<String> = _receivedData
     val timeData : State<String> = _timeData
     val threshold : State<Int> = _threshold
@@ -71,6 +72,7 @@ class CronoViewModel : ViewModel(), SerialInputOutputManager.Listener{
                     Toast.makeText(context, "Failed to open USB connection", Toast.LENGTH_SHORT).show()
                 }
             } else {
+                development = true
                 Toast.makeText(context, "USB device not found , enter in dev mode", Toast.LENGTH_SHORT).show()
             }
         }
@@ -99,6 +101,10 @@ class CronoViewModel : ViewModel(), SerialInputOutputManager.Listener{
         super.onCleared()
         usbIoManager?.stop()
         usbSerialPort?.close()
+    }
+
+    fun isDevModeActive(): Boolean {
+        return this.development
     }
 
     fun send(context: Context,str: String) {
@@ -133,9 +139,6 @@ fun CronoScreen(deviceId: Int, portNum: Int, baudRate: Int) {
     }
 
     LockScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
-
-    DriversManager()
-
 
     Box(modifier = Modifier
         .fillMaxSize()
@@ -174,7 +177,7 @@ fun CronoScreen(deviceId: Int, portNum: Int, baudRate: Int) {
                 }) {
                     Text(text = "Send Data")
                 }
-                TimeManager(timeData)
+                TimeManager(receivedData,viewModel.isDevModeActive())
             }
             Column(modifier = Modifier
                 .padding(20.dp)

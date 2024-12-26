@@ -22,20 +22,26 @@ class TimesViewModel : ViewModel(){
         listTimes.add(time);
     }
 
-    fun storeTimes(timedata: String){
+    fun storeTimes(timedata: String,development:Boolean){
         val file = File("prueba/file485.txt")
         file.printWriter().use { out ->
+            if(development){
+                out.println("t1 de prueba")
+                out.println("t2 de prueba")
+                out.println("t3 de prueba")
+                out.println("t4 de prueba")
+            }
             out.print(timedata)
         }
     }
 }
 
 @Composable
-fun TimeManager(timedata:String){
+fun TimeManager(timedata: String, devModeActive: Boolean){
     val context = LocalContext.current
     val viewModel: TimesViewModel = viewModel()
     Button(onClick = {
-        viewModel.storeTimes(timedata)
+        viewModel.storeTimes(timedata,devModeActive)
         Toast.makeText(context, "data Stored", Toast.LENGTH_SHORT).show()
     }) {
         Text(text = "Store times")
