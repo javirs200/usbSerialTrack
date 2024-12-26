@@ -1,49 +1,79 @@
 package com.rsmax.usbserialtrack
 
+import android.content.Context
 import android.widget.Toast
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import java.io.File
 
 data class Time(val formated: String, val timestamp: String)
 
-class TimesViewModel : ViewModel(){
-    val listTimes = ArrayList<Time>();
+class TimesManager{
+
+    private val listTimes = ArrayList<Time>()
 
     fun addTime(formated: String, timestamp: String){
-        listTimes.add(Time(formated,timestamp));
+        listTimes.add(Time(formated,timestamp))
     }
 
-    fun addTime(time: Time){
-        listTimes.add(time);
-    }
+    fun storeTimes(context: Context, development:Boolean, sessionName:String):Boolean{
 
-    fun storeTimes(timedata: String,development:Boolean){
-        val file = File("prueba/file485.txt")
-        file.printWriter().use { out ->
-            if(development){
-                out.println("t1 de prueba")
-                out.println("t2 de prueba")
-                out.println("t3 de prueba")
-                out.println("t4 de prueba")
+        try {
+            val appSpecificExternalDir = File(context.getExternalFilesDir(null), "$sessionName.txt")
+            appSpecificExternalDir.printWriter().use { out ->
+                if(development){
+                    out.println("t1 de prueba")
+                    out.println("t2 de prueba")
+                    out.println("t3 de prueba")
+                    out.println("t4 de prueba")
+                }else {
+                    for (t in listTimes) {
+                        out.println(t)
+                    }
+                }
             }
-            out.print(timedata)
+            return true
+        }catch(e:Exception){
+            return false
         }
+    }
+
+    fun listTimeFiles(){
+        TODO()
+    }
+
+    fun openTimeFile(){
+        TODO()
     }
 }
 
 @Composable
-fun TimeManager(timedata: String, devModeActive: Boolean){
+fun TimesScreen() {
     val context = LocalContext.current
-    val viewModel: TimesViewModel = viewModel()
+    Text(text = "Crono Screen",
+        color = MaterialTheme.colorScheme.primary,
+        fontSize = 20.sp ,
+        modifier = Modifier.padding(2.dp)
+    )
     Button(onClick = {
-        viewModel.storeTimes(timedata,devModeActive)
-        Toast.makeText(context, "data Stored", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "timer toast", Toast.LENGTH_SHORT).show()
     }) {
-        Text(text = "Store times")
+        Text(text = "make text")
     }
+}
+
+@Preview(
+    device = "spec:parent=virtualPoco,orientation=landscape", apiLevel = 34
+)
+@Composable
+fun TimeManagerPreview(){
+    TimesScreen()
 }

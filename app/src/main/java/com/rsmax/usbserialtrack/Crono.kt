@@ -1,5 +1,6 @@
 package com.rsmax.usbserialtrack
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.hardware.usb.UsbManager
@@ -12,8 +13,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,6 +25,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -32,6 +36,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.hoho.android.usbserial.driver.UsbSerialPort
 import com.hoho.android.usbserial.driver.UsbSerialProber
 import com.hoho.android.usbserial.util.SerialInputOutputManager
@@ -47,12 +53,16 @@ class CronoViewModel : ViewModel(), SerialInputOutputManager.Listener{
     private var usbIoManager: SerialInputOutputManager? = null
     private val _receivedData = mutableStateOf("")
     private val _timeData = mutableStateOf("")
+    private val _sessionName = mutableStateOf("")
     private val _threshold = mutableIntStateOf(50)
     private var connected : Boolean = false
     private var development : Boolean = false
+    private val timesManager : TimesManager = TimesManager()
+    var sessionName : State<String> = _sessionName
     val receivedData: State<String> = _receivedData
     val timeData : State<String> = _timeData
     val threshold : State<Int> = _threshold
+
 
     fun connect(context: Context, deviceId: Int, portNum: Int, baudRate: Int) {
         viewModelScope.launch {
@@ -84,12 +94,12 @@ class CronoViewModel : ViewModel(), SerialInputOutputManager.Listener{
         if(temString.contains("time:")){
             temString = temString.substringAfter("time:").trim()
             val millis = temString.toIntOrNull() ?: return
-
             val minutes = (millis / 60000) % 60
             val seconds = (millis / 1000) % 60
             val milliseconds = millis % 1000
             val formattedTime = format(Locale.ROOT,"%02d:%02d.%03d", minutes, seconds, milliseconds)
             _timeData.value = formattedTime
+            timesManager.addTime(formattedTime,temString)
         }
     }
 
@@ -103,12 +113,7 @@ class CronoViewModel : ViewModel(), SerialInputOutputManager.Listener{
         usbSerialPort?.close()
     }
 
-    fun isDevModeActive(): Boolean {
-        return this.development
-    }
-
     fun send(context: Context,str: String) {
-
         if (!connected) {
             Toast.makeText(context, "not connected", Toast.LENGTH_SHORT).show()
             return
@@ -124,21 +129,66 @@ class CronoViewModel : ViewModel(), SerialInputOutputManager.Listener{
     fun setThreshold(value: Int) {
         _threshold.intValue = value
     }
+
+    fun storeTimes(context: Context) {
+        if(timesManager.storeTimes(context,development, sessionName.value)){
+            Toast.makeText(context, "data stored successfully", Toast.LENGTH_SHORT).show()
+        }else{
+            Toast.makeText(context, "something goes wrong in file storage", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun setSesionName(sessionName: String) {
+        this._sessionName.value = sessionName
+    }
 }
 
 @Composable
-fun CronoScreen(deviceId: Int, portNum: Int, baudRate: Int) {
+fun SessionNamePicker(context:Context,cronoViewModel:CronoViewModel){
+    val showDialog = remember { mutableStateOf(true) }
+    if (showDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showDialog.value = false },
+            title = { Text(text = "Session Name") },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = cronoViewModel.sessionName.value,
+                        onValueChange = { cronoViewModel.setSesionName(it) },
+                        label = { Text("Enter session name") }
+                    )
+                }
+            },
+            confirmButton = {
+                Button(onClick = { showDialog.value = false }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+
+    Button(onClick = { showDialog.value = true }) {
+        Text("Set Session Name")
+    }
+}
+
+
+@Composable
+fun CronoScreen(deviceId: Int, portNum: Int, baudRate: Int,navController: NavController) {
     val context = LocalContext.current
-    val viewModel: CronoViewModel = viewModel()
-    val receivedData by viewModel.receivedData
-    val timeData by viewModel.timeData
-    val threshold by viewModel.threshold
+    val cronoViewModel: CronoViewModel = viewModel()
+    val receivedData by cronoViewModel.receivedData
+    val timeData by cronoViewModel.timeData
+    val threshold by cronoViewModel.threshold
+    val sessionName by cronoViewModel.sessionName
 
     LaunchedEffect(Unit) {
-        viewModel.connect(context, deviceId, portNum, baudRate)
+        cronoViewModel.connect(context, deviceId, portNum, baudRate)
     }
 
     LockScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
+
+    SessionNamePicker(context,cronoViewModel)
 
     Box(modifier = Modifier
         .fillMaxSize()
@@ -146,10 +196,10 @@ fun CronoScreen(deviceId: Int, portNum: Int, baudRate: Int) {
             color = MaterialTheme.colorScheme.background
         )
     ){
-        Text(text = "Crono Screen",
+        Text(text = "Crono Screen , Session : $sessionName",
             color = MaterialTheme.colorScheme.primary,
             fontSize = 20.sp ,
-            modifier = Modifier.padding(2.dp)
+            modifier = Modifier.padding(start = 20.dp , top = 10.dp,end= 0.dp, bottom = 0.dp)
         )
         Row(modifier = Modifier.fillMaxSize()){
             Column(modifier = Modifier
@@ -169,15 +219,24 @@ fun CronoScreen(deviceId: Int, portNum: Int, baudRate: Int) {
                     )
                     Slider(
                         value = threshold.toFloat(),
-                        onValueChange = {viewModel.setThreshold(it.toInt())},
+                        onValueChange = {cronoViewModel.setThreshold(it.toInt())},
                         valueRange = 0f..255f
                     ) }
                 Button(onClick = {
-                    viewModel.send(context,"mensaje de prueba")
+                    cronoViewModel.send(context,"mensaje de prueba")
                 }) {
                     Text(text = "Send Data")
                 }
-                TimeManager(receivedData,viewModel.isDevModeActive())
+                Button(onClick = {
+                    cronoViewModel.storeTimes(context)
+                }) {
+                    Text(text = "Store times")
+                }
+//                Button(onClick = {
+//                   navController.navigate("timeViewer")
+//                }) {
+//                    Text(text = "view times")
+//                }
             }
             Column(modifier = Modifier
                 .padding(20.dp)
@@ -201,6 +260,6 @@ fun CronoScreen(deviceId: Int, portNum: Int, baudRate: Int) {
 )
 @Composable
 fun CronoPreview(){
-    CronoScreen(0,0,115200)
+    CronoScreen(0, 0, 115200 , rememberNavController())
 }
 

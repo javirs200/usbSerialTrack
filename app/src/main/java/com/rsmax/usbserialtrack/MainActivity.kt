@@ -100,7 +100,8 @@ fun AppNavigation() {
             val deviceId = backStackEntry.arguments?.getString("deviceId")?.toInt() ?: 0
             val portNum = backStackEntry.arguments?.getString("portNum")?.toInt() ?: 0
             val baudRate = backStackEntry.arguments?.getString("baudRate")?.toInt() ?: 115200
-            CronoScreen(deviceId, portNum, baudRate)
+            CronoScreen(deviceId, portNum, baudRate,navController)
         }
+        composable("timeViewer") { TimesScreen() }
     }
 }
