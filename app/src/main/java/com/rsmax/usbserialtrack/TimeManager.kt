@@ -98,15 +98,14 @@ fun TimesScreen() {
     val showList = remember { mutableStateOf(true) }
 
     val timeFiles = timeManager.listTimeFiles(context)
-
+    
     Box(modifier = Modifier
         .fillMaxSize()
-        .padding(20.dp)
         .background(
             color = MaterialTheme.colorScheme.background
         )
     ){
-        Column(Modifier.verticalScroll(rememberScrollState())){
+        Column(Modifier.verticalScroll(rememberScrollState()).padding(20.dp)){
             Text(text = "Time Screen ${fileSelected.value}",
                 color = MaterialTheme.colorScheme.primary,
                 fontSize = 20.sp ,
