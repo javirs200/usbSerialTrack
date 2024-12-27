@@ -81,12 +81,18 @@ fun DeviceListItem(item: ListItem, navController: NavController) {
             },
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = "Device: ${item.device?.deviceName}",
-            )
-            Text(
-                text = "Port: ${item.port}",
-            )
+            if(item.driver == null){
+                Text(
+                    text = "Developer mode ( ESP32 not conected )"
+                )
+            }else{
+                Text(
+                    text = "Device: ${item.device?.productName}",
+                )
+                Text(
+                    text = "Port: ${item.port}",
+                )
+            }
         }
     }
 }

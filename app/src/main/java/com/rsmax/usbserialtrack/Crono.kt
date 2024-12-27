@@ -1,6 +1,5 @@
 package com.rsmax.usbserialtrack
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.hardware.usb.UsbManager
@@ -42,9 +41,6 @@ import com.hoho.android.usbserial.driver.UsbSerialPort
 import com.hoho.android.usbserial.driver.UsbSerialProber
 import com.hoho.android.usbserial.util.SerialInputOutputManager
 import kotlinx.coroutines.launch
-import java.lang.String.format
-import java.util.Locale
-
 
 class CronoViewModel : ViewModel(), SerialInputOutputManager.Listener{
 
@@ -90,16 +86,11 @@ class CronoViewModel : ViewModel(), SerialInputOutputManager.Listener{
 
     override fun onNewData(data: ByteArray) {
         _receivedData.value += String(data)
-        var temString = String(data)
+        val temString = String(data)
         if(temString.contains("time:")){
-            temString = temString.substringAfter("time:").trim()
-            val millis = temString.toIntOrNull() ?: return
-            val minutes = (millis / 60000) % 60
-            val seconds = (millis / 1000) % 60
-            val milliseconds = millis % 1000
-            val formattedTime = format(Locale.ROOT,"%02d:%02d.%03d", minutes, seconds, milliseconds)
-            _timeData.value = formattedTime
-            timesManager.addTime(formattedTime,temString)
+            val time = timesManager.convertTime(temString)
+            _timeData.value = time.formated
+            timesManager.addTime(time)
         }
     }
 
@@ -138,7 +129,7 @@ class CronoViewModel : ViewModel(), SerialInputOutputManager.Listener{
         }
     }
 
-    fun setSesionName(sessionName: String) {
+    fun setSessionName(sessionName: String) {
         this._sessionName.value = sessionName
     }
 }
@@ -154,7 +145,7 @@ fun SessionNamePicker(context:Context,cronoViewModel:CronoViewModel){
                 Column {
                     OutlinedTextField(
                         value = cronoViewModel.sessionName.value,
-                        onValueChange = { cronoViewModel.setSesionName(it) },
+                        onValueChange = { cronoViewModel.setSessionName(it) },
                         label = { Text("Enter session name") }
                     )
                 }
@@ -174,7 +165,7 @@ fun SessionNamePicker(context:Context,cronoViewModel:CronoViewModel){
 
 
 @Composable
-fun CronoScreen(deviceId: Int, portNum: Int, baudRate: Int,navController: NavController) {
+fun CronoScreen(deviceId: Int, portNum: Int, baudRate: Int) {
     val context = LocalContext.current
     val cronoViewModel: CronoViewModel = viewModel()
     val receivedData by cronoViewModel.receivedData
@@ -208,7 +199,6 @@ fun CronoScreen(deviceId: Int, portNum: Int, baudRate: Int,navController: NavCon
                 .align(Alignment.CenterVertically)
             )
             {
-
                 Text(text = timeData , color = MaterialTheme.colorScheme.primary, fontSize = 50.sp , fontWeight = FontWeight.Bold , modifier = Modifier.padding(50.dp) )
                 Row {
                     Text(text = threshold.toString(),
@@ -232,11 +222,6 @@ fun CronoScreen(deviceId: Int, portNum: Int, baudRate: Int,navController: NavCon
                 }) {
                     Text(text = "Store times")
                 }
-//                Button(onClick = {
-//                   navController.navigate("timeViewer")
-//                }) {
-//                    Text(text = "view times")
-//                }
             }
             Column(modifier = Modifier
                 .padding(20.dp)
@@ -260,6 +245,6 @@ fun CronoScreen(deviceId: Int, portNum: Int, baudRate: Int,navController: NavCon
 )
 @Composable
 fun CronoPreview(){
-    CronoScreen(0, 0, 115200 , rememberNavController())
+    CronoScreen(0, 0, 115200 )
 }
 

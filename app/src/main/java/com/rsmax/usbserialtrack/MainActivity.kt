@@ -7,9 +7,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -71,12 +73,21 @@ class MainActivity : ComponentActivity() {
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     contentColor = MaterialTheme.colorScheme.primary,
                 ) {
-                    Text(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        textAlign = TextAlign.Center,
-                        text = "made by javi",
-                    )
+                   Row{
+                       Button(
+                           modifier = Modifier.padding(14.dp,0.dp),
+                           onClick = {
+                           navController.navigate("timeViewer")
+                       }) {
+                           Text(text = "view times")
+                       }
+                       Text(
+                           modifier = Modifier
+                               .fillMaxWidth(),
+                           textAlign = TextAlign.Center,
+                           text = "made by javi",
+                       )
+                   }
                 }
             }
         ) { innerPadding ->
@@ -100,7 +111,7 @@ fun AppNavigation() {
             val deviceId = backStackEntry.arguments?.getString("deviceId")?.toInt() ?: 0
             val portNum = backStackEntry.arguments?.getString("portNum")?.toInt() ?: 0
             val baudRate = backStackEntry.arguments?.getString("baudRate")?.toInt() ?: 115200
-            CronoScreen(deviceId, portNum, baudRate,navController)
+            CronoScreen(deviceId, portNum, baudRate)
         }
         composable("timeViewer") { TimesScreen() }
     }
