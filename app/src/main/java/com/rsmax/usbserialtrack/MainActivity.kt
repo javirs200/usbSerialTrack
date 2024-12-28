@@ -55,7 +55,6 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun DeviceSelectionScreen(navController:NavController) {
-        var presses by remember { mutableIntStateOf(0) }
         Scaffold(
             topBar = {
                 TopAppBar(

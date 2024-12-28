@@ -135,7 +135,7 @@ class CronoViewModel : ViewModel(), SerialInputOutputManager.Listener{
 }
 
 @Composable
-fun SessionNamePicker(context:Context,cronoViewModel:CronoViewModel){
+fun SessionNamePicker(cronoViewModel:CronoViewModel){
     val showDialog = remember { mutableStateOf(true) }
     if (showDialog.value) {
         AlertDialog(
@@ -179,7 +179,7 @@ fun CronoScreen(deviceId: Int, portNum: Int, baudRate: Int) {
 
     LockScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
 
-    SessionNamePicker(context,cronoViewModel)
+    SessionNamePicker(cronoViewModel)
 
     Box(modifier = Modifier
         .fillMaxSize()
