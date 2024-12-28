@@ -83,12 +83,14 @@ class CronoViewModel : ViewModel(), SerialInputOutputManager.Listener{
     }
 
     override fun onNewData(data: ByteArray) {
-        _receivedData.value += String(data)
         val temString = String(data)
         if(temString.contains("time:")){
             val time = timesManager.convertTime(temString)
             _timeData.value = time.formated
             timesManager.addTime(time)
+            _receivedData.value += time.formated
+        }else{
+            _receivedData.value += "Debug log : " + String(data)
         }
     }
 
