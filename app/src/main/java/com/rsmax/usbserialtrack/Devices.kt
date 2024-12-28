@@ -83,7 +83,7 @@ fun DeviceListItem(item: ListItem, navController: NavController) {
         Column(modifier = Modifier.padding(16.dp)) {
             if(item.driver == null){
                 Text(
-                    text = "Developer mode ( ESP32 not conected )"
+                    text = "Developer mode ( ESP32 not connected )"
                 )
             }else{
                 Text(

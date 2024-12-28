@@ -44,8 +44,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        if ("android.hardware.usb.action.USB_DEVICE_ATTACHED".equals(intent.action)) {
+        if ("android.hardware.usb.action.USB_DEVICE_ATTACHED" == intent.action) {
             // Handle USB device attached action
+            Toast.makeText(application.applicationContext, "usb device connected", Toast.LENGTH_SHORT).show()
         }
     }
 }
@@ -82,7 +83,7 @@ class MainActivity : ComponentActivity() {
                            modifier = Modifier
                                .fillMaxWidth(),
                            textAlign = TextAlign.Center,
-                           text = "made by javi",
+                           text = "made by Javier",
                        )
                    }
                 }
