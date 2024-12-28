@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -46,7 +47,7 @@ class CronoViewModel : ViewModel(), SerialInputOutputManager.Listener{
     private var usbSerialPort: UsbSerialPort? = null
     private var usbIoManager: SerialInputOutputManager? = null
     private val _receivedData = mutableStateOf("")
-    private val _timeData = mutableStateOf("")
+    private val _timeData = mutableStateOf("0:00.000")
     private val _sessionName = mutableStateOf("")
     private val _threshold = mutableIntStateOf(50)
     private var connected : Boolean = false
@@ -190,7 +191,7 @@ fun CronoScreen(deviceId: Int, portNum: Int, baudRate: Int) {
         Text(text = "Crono Screen , Session : $sessionName",
             color = MaterialTheme.colorScheme.primary,
             fontSize = 20.sp ,
-            modifier = Modifier.padding(start = 20.dp , top = 10.dp,end= 0.dp, bottom = 0.dp)
+            modifier = Modifier.padding(start = 20.dp , top = 20.dp,end = 0.dp, bottom = 10.dp)
         )
         Row(modifier = Modifier.fillMaxSize()){
             Column(modifier = Modifier
@@ -199,7 +200,14 @@ fun CronoScreen(deviceId: Int, portNum: Int, baudRate: Int) {
                 .align(Alignment.CenterVertically)
             )
             {
-                Text(text = timeData , color = MaterialTheme.colorScheme.primary, fontSize = 50.sp , fontWeight = FontWeight.Bold , modifier = Modifier.padding(50.dp) )
+                Text(text = timeData ,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 100.sp ,
+                    fontWeight = FontWeight.Bold ,
+                    modifier = Modifier
+                        .padding(20.dp)
+                )
+
                 Row {
                     Text(text = threshold.toString(),
                         color = MaterialTheme.colorScheme.primary,
@@ -211,16 +219,22 @@ fun CronoScreen(deviceId: Int, portNum: Int, baudRate: Int) {
                         value = threshold.toFloat(),
                         onValueChange = {cronoViewModel.setThreshold(it.toInt())},
                         valueRange = 0f..255f
-                    ) }
-                Button(onClick = {
-                    cronoViewModel.send(context,"mensaje de prueba")
-                }) {
-                    Text(text = "Send Data")
+                    ) 
                 }
-                Button(onClick = {
-                    cronoViewModel.storeTimes(context)
-                }) {
-                    Text(text = "Store times")
+                Row (modifier = Modifier.align(Alignment.CenterHorizontally)){
+                    Button(onClick = {
+                        cronoViewModel.send(context,"mensaje de prueba")
+                    }) {
+                        Text(text = "Send Data")
+                    }
+                    Spacer(
+                        modifier = Modifier.padding(20.dp,0.dp)
+                    )
+                    Button(onClick = {
+                        cronoViewModel.storeTimes(context)
+                    }) {
+                        Text(text = "Store times")
+                    }
                 }
             }
             Column(modifier = Modifier
