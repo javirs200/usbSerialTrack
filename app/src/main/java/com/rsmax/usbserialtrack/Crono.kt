@@ -15,9 +15,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,10 +31,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -133,6 +140,14 @@ class CronoViewModel : ViewModel(), SerialInputOutputManager.Listener{
     fun setSessionName(sessionName: String) {
         this._sessionName.value = sessionName
     }
+
+    fun getTimes(): ArrayList<Time> {
+        return timesManager.getTimes()
+    }
+
+    fun getTopTime(): Time{
+        return timesManager.getTopTime()
+    }
 }
 
 @Composable
@@ -165,6 +180,7 @@ fun SessionNamePicker(cronoViewModel:CronoViewModel){
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CronoScreen(deviceId: Int, portNum: Int, baudRate: Int) {
     val context = LocalContext.current
@@ -237,18 +253,46 @@ fun CronoScreen(deviceId: Int, portNum: Int, baudRate: Int) {
                     }
                 }
             }
+            var state by remember { mutableIntStateOf(0) }
+            val titles = listOf("Tab 1", "Tab 2")
             Column(modifier = Modifier
+                .align(Alignment.CenterVertically)
+                .fillMaxSize()
                 .padding(20.dp)
                 .background(color = MaterialTheme.colorScheme.background)
                 .weight(0.3f)
-                .fillMaxSize()
-                .align(Alignment.CenterVertically)
-                .verticalScroll(rememberScrollState()))
+            )
             {
-                Text(text = "Crono Screen",color = MaterialTheme.colorScheme.primary)
-                Text(text = "Received Data:",color = MaterialTheme.colorScheme.primary)
-                Text(text = receivedData,color = MaterialTheme.colorScheme.primary)
+                PrimaryTabRow(selectedTabIndex = state) {
+                    titles.forEachIndexed { index, title ->
+                        Tab(
+                            selected = state == index,
+                            onClick = { state = index },
+                            text = {
+                                Text(text = title, overflow = TextOverflow.Ellipsis)
+                            }
+                        )
+                    }
+                }
+                if(state == 0){
+                    Text(text = "Raw Log",color = MaterialTheme.colorScheme.primary)
+                    Text(text = receivedData,color = MaterialTheme.colorScheme.primary)
+                }else if(state == 1){
+                    Text(text = "Fastest Lap : ${cronoViewModel.getTopTime().formated}",color = MaterialTheme.colorScheme.primary)
+                    Column(modifier = Modifier
+                        .verticalScroll(rememberScrollState())) {
+                        val times = cronoViewModel.getTimes()
+                        for(t in times){
+                            ListItem(
+                                headlineContent = { Text(t.formated) },
+                            )
+                            HorizontalDivider()
+                        }
+                }
+                }
+
             }
+
         }
     }
 

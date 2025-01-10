@@ -32,9 +32,21 @@ data class Time(val formated: String, val timestamp: Int)
 class TimesManager{
 
     private val listTimes = ArrayList<Time>()
+    private var topTime :Time = Time("", Int.MAX_VALUE)
 
     fun addTime(time : Time){
         listTimes.add(time)
+        if(time.timestamp < topTime.timestamp){
+            topTime = time
+        }
+    }
+
+    fun getTopTime():Time{
+        return topTime
+    }
+
+    fun getTimes() : ArrayList<Time>{
+        return listTimes;
     }
 
     fun convertTime(temString:String):Time{
