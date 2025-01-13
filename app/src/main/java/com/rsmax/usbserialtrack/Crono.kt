@@ -65,11 +65,11 @@ class CronoViewModel : ViewModel(), SerialInputOutputManager.Listener{
     val timeData : State<String> = _timeData
     val threshold : State<Int> = _threshold
 
-
-    fun connect(context: Context, deviceId: Int, portNum: Int, baudRate: Int) {
+    fun connect(context:Context,deviceId: Int, portNum: Int, baudRate: Int) {
         viewModelScope.launch {
             val usbManager = context.getSystemService(Context.USB_SERVICE) as UsbManager
             val driver = UsbSerialProber.getDefaultProber().findAllDrivers(usbManager).firstOrNull { it.device.deviceId == deviceId }
+            val result: String
             if (driver != null) {
                 val connection = usbManager.openDevice(driver.device)
                 if (connection != null) {
@@ -79,14 +79,15 @@ class CronoViewModel : ViewModel(), SerialInputOutputManager.Listener{
                     usbIoManager = SerialInputOutputManager(usbSerialPort, this@CronoViewModel)
                     usbIoManager?.start()
                     connected = true
-                    Toast.makeText(context, "device connected", Toast.LENGTH_SHORT).show()
+                    result = "device connected"
                 } else {
-                    Toast.makeText(context, "Failed to open USB connection", Toast.LENGTH_SHORT).show()
+                    result ="Failed to open USB connection"
                 }
             } else {
                 development = true
-                Toast.makeText(context, "USB device not found , enter in dev mode", Toast.LENGTH_SHORT).show()
+                result = "USB device not found , enter in dev mode"
             }
+            Toast.makeText(context, result, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -95,10 +96,15 @@ class CronoViewModel : ViewModel(), SerialInputOutputManager.Listener{
         if(temString.contains("time:")){
             val time = timesManager.convertTime(temString)
             _timeData.value = time.formated
-            timesManager.addTime(time)
-            _receivedData.value += time.formated
+            _receivedData.value += "on new data time:" + time.formated
+            try {
+                timesManager.addTime(time)
+                timesManager.addTopTime(time)
+            }catch (exception :Exception){
+                _receivedData.value += "on new data Exception : $exception"
+            }
         }else{
-            _receivedData.value += "Debug log : " + String(data)
+            _receivedData.value += "on new data log : " + String(data)
         }
     }
 
@@ -112,16 +118,17 @@ class CronoViewModel : ViewModel(), SerialInputOutputManager.Listener{
         usbSerialPort?.close()
     }
 
-    fun send(context: Context,str: String) {
+    private fun send(str: String) : String {
         if (!connected) {
-            Toast.makeText(context, "not connected", Toast.LENGTH_SHORT).show()
-            return
+            return "not connected"
         }
         try {
             val data = (str + '\n').toByteArray()
             usbSerialPort!!.write(data, writeWaitMilliseconds)
-        } catch (e: java.lang.Exception) {
+            return "data send"
+        } catch (e : Exception) {
             onRunError(e)
+            return e.toString()
         }
     }
 
@@ -129,11 +136,15 @@ class CronoViewModel : ViewModel(), SerialInputOutputManager.Listener{
         _threshold.intValue = value
     }
 
-    fun storeTimes(context: Context) {
-        if(timesManager.storeTimes(context,development, sessionName.value)){
-            Toast.makeText(context, "data stored successfully", Toast.LENGTH_SHORT).show()
+    fun sendThreshold():String{
+        return send((_threshold.intValue*-1).toString())
+    }
+
+    fun storeTimes(context:Context) : String{
+        return if(timesManager.storeTimes(context,development, sessionName.value)){
+            "data stored successfully"
         }else{
-            Toast.makeText(context, "something goes wrong in file storage", Toast.LENGTH_SHORT).show()
+            "something goes wrong in file storage"
         }
     }
 
@@ -184,14 +195,14 @@ fun SessionNamePicker(cronoViewModel:CronoViewModel){
 @Composable
 fun CronoScreen(deviceId: Int, portNum: Int, baudRate: Int) {
     val context = LocalContext.current
-    val cronoViewModel: CronoViewModel = viewModel()
+    val cronoViewModel : CronoViewModel = viewModel()
     val receivedData by cronoViewModel.receivedData
     val timeData by cronoViewModel.timeData
     val threshold by cronoViewModel.threshold
     val sessionName by cronoViewModel.sessionName
 
     LaunchedEffect(Unit) {
-        cronoViewModel.connect(context, deviceId, portNum, baudRate)
+        cronoViewModel.connect(context,deviceId, portNum, baudRate)
     }
 
     LockScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
@@ -239,15 +250,17 @@ fun CronoScreen(deviceId: Int, portNum: Int, baudRate: Int) {
                 }
                 Row (modifier = Modifier.align(Alignment.CenterHorizontally)){
                     Button(onClick = {
-                        cronoViewModel.send(context,"mensaje de prueba")
+                        val result = cronoViewModel.sendThreshold()
+                        Toast.makeText(context, result, Toast.LENGTH_SHORT).show()
                     }) {
-                        Text(text = "Send Data")
+                        Text(text = "Send threshold")
                     }
                     Spacer(
                         modifier = Modifier.padding(20.dp,0.dp)
                     )
                     Button(onClick = {
-                        cronoViewModel.storeTimes(context)
+                        val result =cronoViewModel.storeTimes(context)
+                        Toast.makeText(context, result, Toast.LENGTH_SHORT).show()
                     }) {
                         Text(text = "Store times")
                     }
