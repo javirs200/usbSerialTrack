@@ -2,6 +2,8 @@ package com.rsmax.usbserialtrack
 
 import android.content.Context
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -16,13 +18,19 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import kotlinx.coroutines.android.awaitFrame
+import kotlinx.coroutines.launch
 import java.io.File
 import java.lang.String.format
 import java.util.Locale
@@ -36,6 +44,9 @@ class TimesManager{
 
     fun addTime(time : Time){
         listTimes.add(time)
+    }
+
+    fun addTopTime(time: Time){
         if(time.timestamp < topTime.timestamp){
             topTime = time
         }
@@ -105,10 +116,16 @@ fun TimesScreen() {
     val context = LocalContext.current
     val timeManager = TimesManager()
     val fileSelected = remember { mutableStateOf("") }
-    val showList = remember { mutableStateOf(true) }
+    var showList by remember { mutableStateOf(true) }
 
     val timeFiles = timeManager.listTimeFiles(context)
-    
+
+
+    BackHandler(enabled = !showList) {
+        println("back pushed")
+        showList = true
+    }
+
     Box(modifier = Modifier
         .fillMaxSize()
         .background(
@@ -121,7 +138,7 @@ fun TimesScreen() {
                 fontSize = 20.sp ,
                 modifier = Modifier.padding(start = 20.dp , top = 10.dp,end= 0.dp, bottom = 0.dp)
             )
-            if(showList.value){
+            if(showList){
                 for (timeFileName in timeFiles){
                     Card(
                         modifier = Modifier
@@ -132,7 +149,7 @@ fun TimesScreen() {
                                     .makeText(context, "$timeFileName selected", Toast.LENGTH_SHORT)
                                     .show()
                                 fileSelected.value = timeFileName
-                                showList.value = false
+                                showList = false
                             }
                     ){
                         Text(text = timeFileName,
